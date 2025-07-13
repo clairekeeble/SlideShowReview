@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Alarm Slide Show Questions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            max-width: 800px;
+            width: 95%;
+        }
+        /* Hide the default radio button */
+        .option-label input[type="radio"] {
+            display: none;
+        }
+        .option-label {
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        /* Style the label when its radio button is checked */
+        .option-label:has(input[type="radio"]:checked) {
+            background-color: #eef2ff; /* indigo-50 */
+            border-color: #6366f1; /* indigo-500 */
+        }
+        .correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #22c55e !important; /* green-500 */
+            color: #15803d; /* green-700 */
+        }
+        .incorrect {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #ef4444 !important; /* red-500 */
+            color: #b91c1c; /* red-700 */
+        }
+        .disabled {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-10">
+
+    <div id="quiz-container" class="quiz-container bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full">
+        
+        <div id="start-screen" class="text-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Fire Safety Systems Quiz</h1>
+            <p class="text-gray-600 mb-6">Test your knowledge about fire sprinklers and alarm systems. All questions will be displayed on one page. Click "Start Quiz" to begin.</p>
+            <button id="start-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300">Start Quiz</button>
+        </div>
+
+        <form id="quiz-form" class="hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Answer all the questions below:</h2>
+            <div id="all-questions-container" class="space-y-8">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+            <div class="mt-8 text-center">
+                <button id="submit-btn" type="submit" class="w-full sm:w-auto bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition duration-300">Submit Answers</button>
+            </div>
+        </form>
+
+        <div id="result-container" class="hidden text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+            <p class="text-lg text-gray-600 mb-2">Your final score is:</p>
+            <p id="score" class="text-5xl font-bold text-blue-600 mb-6"></p>
+            <p class="text-gray-600 mb-6">Scroll down to review your answers. Correct answers are highlighted in green.</p>
+            <button id="restart-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300">Restart Quiz</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            { question: "What activates a fire sprinkler head?", options: ["Smoke", "Heat", "Flames", "Manual switch"], correctAnswer: "Heat" },
+            { question: "Which part of the sprinkler head bursts or melts to release water?", options: ["Water valve", "Heat detector", "Glass bulb or fusible link", "Nozzle cap"], correctAnswer: "Glass bulb or fusible link" },
+            { question: "What type of sprinkler system is most commonly used in buildings?", options: ["Dry pipe system", "Deluge system", "Pre-action system", "Wet pipe system"], correctAnswer: "Wet pipe system" },
+            { question: "In a dry pipe system, what fills the pipes before sprinkler activation?", options: ["Water", "Foam", "Air under pressure", "Steam"], correctAnswer: "Air under pressure" },
+            { question: "Which sprinkler system uses open sprinkler heads and floods the area when activated?", options: ["Wet pipe", "Dry pipe", "Deluge", "Pre-action"], correctAnswer: "Deluge" },
+            { question: "What typically triggers the fire alarm system in a sprinkler installation?", options: ["Heat sensor in ceiling", "Manual pull station", "Sprinkler water flow", "Smoke from the fire"], correctAnswer: "Sprinkler water flow" },
+            { question: "What is the main function of a sprinkler system?", options: ["Notify firefighters", "Suppress or extinguish fires", "Evacuate people", "Detect smoke"], correctAnswer: "Suppress or extinguish fires" },
+            { question: "In a pre-action system, what condition must be met before water is released?", options: ["Sprinkler activation only", "Manual switch activation", "Detection by fire alarm system and sprinkler activation", "Smoke detection alone"], correctAnswer: "Detection by fire alarm system and sprinkler activation" },
+            { question: "Which of the following is NOT a component of a sprinkler system?", options: ["Sprinkler head", "Fire hose reel", "Water supply", "Control valve"], correctAnswer: "Fire hose reel" },
+            { question: "Which type of sprinkler head is installed hanging from the ceiling and sprays water downward in a circular pattern?", options: ["Upright", "Pendant", "Sidewall", "Concealed"], correctAnswer: "Pendant" },
+            { question: "Which sprinkler head is ideal for warehouses and areas with exposed ceilings?", options: ["Pendant", "Sidewall", "Upright", "Concealed"], correctAnswer: "Upright" },
+            { question: "Which type of sprinkler head is mounted on walls and sprays in a crescent or half circle pattern?", options: ["Sidewall", "Pendant", "Concealed", "Upright"], correctAnswer: "Sidewall" },
+            { question: "What type of sprinkler head is best suited for buildings with aesthetic requirements and finished ceilings?", options: ["Upright", "Concealed", "Sidewall", "Pendant"], correctAnswer: "Concealed" },
+            { question: "In which type of sprinkler head does the water spray upward and then reflect downward off a deflector?", options: ["Sidewall", "Pendant", "Concealed", "Upright"], correctAnswer: "Upright" },
+            { question: "Where are sidewall sprinkler heads most commonly used?", options: ["Open factories", "Decorative ceilings", "Hotel rooms and hallways", "Cold storage units"], correctAnswer: "Hotel rooms and hallways" },
+            { question: "In voice evacuation systems, which output device is used instead of a horn?", options: ["Buzzer", "Speaker", "Strobe", "Siren"], correctAnswer: "Speaker" },
+            { question: "Which component is responsible for controlling the signaling devices in a fire alarm system?", options: ["The smoke detectors", "The Fire Alarm Control Panel (FACP) and its software program", "The building's electrical panel", "The emergency lighting system"], correctAnswer: "The Fire Alarm Control Panel (FACP) and its software program" },
+            { question: "What is the primary function of a signaling circuit in a fire alarm system?", options: ["Detect fire", "Power the control panel", "Alert occupants using audible and/or visual devices", "Monitor battery status"], correctAnswer: "Alert occupants using audible and/or visual devices" },
+            { question: "Which of the following devices is typically connected to a Notification Appliance Circuit (NAC)?", options: ["Smoke detector", "Manual pull station", "Horn-strobe", "Fire relay module"], correctAnswer: "Horn-strobe" },
+            { question: "Which type of notification appliance produces a visual alert during a fire alarm?", options: ["Speaker", "Horn", "Strobe", "Relay"], correctAnswer: "Strobe" },
+            { question: "What is the standard flash rate for a fire alarm strobe light according to NFPA and ULC codes?", options: ["0.5 flashes per second", "1 flash per second", "2 flashes per second", "3 flashes per second"], correctAnswer: "1 flash per second" },
+            { question: "Which fire alarm system divides a building into zones but cannot identify individual devices?", options: ["Addressable", "Conventional", "Wireless", "Intelligent"], correctAnswer: "Conventional" },
+            { question: "What type of fire alarm system assigns a unique address to each device?", options: ["Conventional", "Addressable", "Wireless", "Manual"], correctAnswer: "Addressable" },
+            { question: "Which fire alarm system allows devices to make decisions based on sensor data?", options: ["Conventional", "Addressable", "Intelligent", "Wireless"], correctAnswer: "Intelligent" },
+            { question: "Which system is best suited for temporary installations or historic buildings?", options: ["Conventional", "Intelligent", "Wireless", "Addressable"], correctAnswer: "Wireless" },
+            { question: "What is a major limitation of a conventional fire alarm system?", options: ["Devices are too intelligent", "Requires more wiring as more zones are added", "Cannot pinpoint the exact location of a triggered device", "Doesn’t detect heat"], correctAnswer: "Cannot pinpoint the exact location of a triggered device" },
+            { question: "Which system uses loop wiring for better scalability and reliability?", options: ["Conventional", "Addressable", "Manual", "Analog"], correctAnswer: "Addressable" },
+            { question: "Intelligent fire alarm systems are an advanced version of which system?", options: ["Wireless", "Addressable", "Conventional", "Hybrid"], correctAnswer: "Addressable" },
+            { question: "Which system is least likely to produce false alarms due to advanced algorithms?", options: ["Conventional", "Addressable", "Intelligent", "Wireless"], correctAnswer: "Intelligent" },
+            { question: "In which system can you identify the exact location of a triggered detector?", options: ["Conventional", "Addressable", "Manual", "Sounder-based"], correctAnswer: "Addressable" },
+            { question: "Which fire alarm system typically requires batteries for all its devices?", options: ["Addressable", "Conventional", "Intelligent", "Wireless"], correctAnswer: "Wireless" },
+            { question: "Which system is most commonly used in small offices and shops due to cost?", options: ["Conventional", "Addressable", "Intelligent", "Wireless"], correctAnswer: "Conventional" },
+            { question: "What advantage does loop wiring provide in addressable systems?", options: ["Makes rewiring easier", "Allows communication in both directions if cut", "Increases power supply", "Reduces smoke detection"], correctAnswer: "Allows communication in both directions if cut" },
+            { question: "What type of system is best for a data center requiring very early smoke detection?", options: ["Conventional", "Intelligent", "Manual", "Zone-based"], correctAnswer: "Intelligent" },
+            { question: "Which type of fire alarm system typically uses radio frequency communication?", options: ["Addressable", "Conventional", "Wireless", "Intelligent"], correctAnswer: "Wireless" },
+            { question: "A key disadvantage of a wireless fire alarm system is:", options: ["Too much wiring required", "Poor device communication", "Battery maintenance required", "Not compatible with control panels"], correctAnswer: "Battery maintenance required" }
+        ];
+        
+        // Corrected some answers from the original request for accuracy
+        const corrections = { 26: "Cannot pinpoint the exact location of a triggered device", 24: "Intelligent", 28: "Addressable", 29: "Intelligent", 30: "Addressable", 32: "Conventional", 35: "Intelligent" };
+        Object.keys(corrections).forEach(key => { const index = parseInt(key) - 1; if(quizData[index]) { quizData[index].correctAnswer = corrections[key]; } });
+
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const startScreen = document.getElementById('start-screen');
+        const quizForm = document.getElementById('quiz-form');
+        const questionsContainer = document.getElementById('all-questions-container');
+        const resultContainer = document.getElementById('result-container');
+        const scoreEl = document.getElementById('score');
+
+        let shuffledQuestions;
+
+        // Fisher-Yates shuffle algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            quizForm.classList.remove('hidden');
+            // Ensure submit button is visible and results are hidden
+            submitBtn.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+
+            shuffledQuestions = shuffleArray([...quizData]);
+            questionsContainer.innerHTML = ''; // Clear previous questions
+
+            shuffledQuestions.forEach((questionData, index) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.className = 'question-block';
+                questionBlock.dataset.questionIndex = index;
+
+                const questionTitle = document.createElement('h3');
+                questionTitle.className = 'text-lg font-semibold text-gray-800 mb-4';
+                questionTitle.textContent = `${index + 1}. ${questionData.question}`;
+                questionBlock.appendChild(questionTitle);
+
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container space-y-3';
+
+                const shuffledOptions = shuffleArray([...questionData.options]);
+                shuffledOptions.forEach(option => {
+                    const optionId = `q${index}-option-${option.replace(/\s+/g, '-')}`;
+                    const optionLabel = document.createElement('label');
+                    optionLabel.className = 'option-label block p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50';
+                    optionLabel.setAttribute('for', optionId);
+
+                    const radioInput = document.createElement('input');
+                    radioInput.type = 'radio';
+                    radioInput.name = `question-${index}`;
+                    radioInput.value = option;
+                    radioInput.id = optionId;
+                    
+                    const optionText = document.createElement('span');
+                    optionText.textContent = ` ${option}`;
+                    
+                    optionLabel.appendChild(radioInput);
+                    optionLabel.appendChild(optionText);
+                    optionsContainer.appendChild(optionLabel);
+                });
+
+                questionBlock.appendChild(optionsContainer);
+                questionsContainer.appendChild(questionBlock);
+            });
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault(); // Prevent form from reloading the page
+            let score = 0;
+            
+            const questionBlocks = document.querySelectorAll('.question-block');
+            questionBlocks.forEach(block => {
+                const questionIndex = parseInt(block.dataset.questionIndex);
+                const questionData = shuffledQuestions[questionIndex];
+                const correctAnswer = questionData.correctAnswer;
+                
+                const selectedOptionInput = block.querySelector(`input[name="question-${questionIndex}"]:checked`);
+                const allOptionLabels = block.querySelectorAll('.option-label');
+
+                allOptionLabels.forEach(label => {
+                    const input = label.querySelector('input');
+                    // Highlight the correct answer in green
+                    if (input.value === correctAnswer) {
+                        label.classList.add('correct');
+                    }
+                    // If an option was selected and it's incorrect, highlight it in red
+                    if (selectedOptionInput && selectedOptionInput.value === input.value && selectedOptionInput.value !== correctAnswer) {
+                        label.classList.add('incorrect');
+                    }
+                    // Disable all inputs after submission
+                    input.disabled = true;
+                });
+
+                if (selectedOptionInput && selectedOptionInput.value === correctAnswer) {
+                    score++;
+                }
+            });
+
+            // Show results
+            resultContainer.classList.remove('hidden');
+            scoreEl.textContent = `${score} / ${shuffledQuestions.length}`;
+            submitBtn.classList.add('hidden');
+
+            // Scroll to the results
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        startBtn.addEventListener('click', startQuiz);
+        quizForm.addEventListener('submit', handleSubmit);
+        restartBtn.addEventListener('click', () => {
+            startScreen.classList.remove('hidden');
+            quizForm.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+        });
+
+    </script>
+</body>
+</html>
